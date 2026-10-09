@@ -18,6 +18,7 @@ def check_capability(client):
             raise ValueError('Unsupported pricing contract')
         if set(contract.get('commission_modes', [])) != {'flat', 'per_person', 'round_up'}:
             raise ValueError('Unsupported commission modes')
+        return contract
     except Exception:
         raise CapabilityError('Quote pricing API is unavailable or incompatible. No mutations were sent.') from None
 
@@ -37,7 +38,10 @@ def verify_write(kind, payload, response, expected_fare=None):
     if kind == 'transfers':
         if any(response.get(k) != payload[k] for k in ('route_from', 'route_to', 'car_type', 'qty')):
             raise ValueError('Transport input mismatch')
-        if 'sar_fare_micros' in payload:
+        if 'cad_fare_micros' in payload:
+            if response.get('fare_source') != 'custom' or response.get('cad_fare_micros') != payload['cad_fare_micros'] or response.get('cad_amount_micros') != payload['cad_fare_micros'] * payload['qty']:
+                raise ValueError('Fixed CAD fare not persisted exactly')
+        elif 'sar_fare_micros' in payload:
             if response.get('fare_source') != 'custom' or response.get('sar_fare_micros') != payload['sar_fare_micros']:
                 raise ValueError('Custom fare not persisted')
         elif response.get('fare_matched') is not True or response.get('sar_fare_micros') != expected_fare:

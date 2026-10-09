@@ -9,6 +9,7 @@ from pathlib import Path
 import tempfile
 import urllib.error
 import urllib.request
+from urllib.parse import quote as encode_query
 from quote_payload import plan, micros
 from quote_contract import CapabilityError, check_capability, verify_write
 from quote_pdf import download_pdf
@@ -28,10 +29,11 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
 
 
 class Client:
-    def __init__(self, base=BASE):
+    def __init__(self, base=BASE, timeout=30):
         if base != BASE:
             raise ValueError('Only the existing local gatekeeper http://127.0.0.1:8081 is allowed')
         self.base = base
+        self.timeout = timeout
         self.opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect())
 
     def request(self, method, path, payload=None):
@@ -39,7 +41,7 @@ class Client:
         req = urllib.request.Request(self.base + path, data=data, method=method,
                                      headers={'Content-Type': 'application/json'})
         try:
-            with self.opener.open(req, timeout=30) as response:
+            with self.opener.open(req, timeout=self.timeout) as response:
                 return json.load(response)
         except urllib.error.HTTPError as exc:
             # Never print arbitrary response bodies containing customer data.
@@ -121,7 +123,22 @@ def apply(job, journal, path, client):
     desired = {o['key'] for o in ops}
     if any(k not in desired and e['state'] == 'applied' for k, e in entries.items()):
         raise ValueError('Previously applied row removed or unconfirmed; deletion/rollback unsupported')
-    check_capability(client)
+    contract = check_capability(client)
+    if any('cad_fare_micros' in op['payload'] for op in ops) and contract.get('transport_cad_cost_input') != 'cad_fare_micros':
+        raise CapabilityError('Server does not support fixed CAD transport. No mutations were sent.')
+    # Resolve a conversation-specific salesperson before any mutations.
+    opportunity_op = next(op for op in ops if op['kind'] == 'opportunity')
+    owner = opportunity_op['payload']
+    if not owner.get('owner_email'):
+        name = owner.get('owner_name')
+        if not isinstance(name, str) or len(name.strip()) < 2 or len(name) > 120:
+            raise ValueError('A specific salesperson name is required')
+        result = client.request('GET', '/opportunities/owners?q=' + encode_query(name.strip(), safe=''))
+        matches = result.get('owners')
+        if not isinstance(matches, list) or len(matches) != 1 or not matches[0].get('email'):
+            raise ValueError('Salesperson name has no unique CRM match; clarify the name, not an invented email')
+        owner['owner_email'] = matches[0]['email']
+    owner.pop('owner_name', None)
     existing = entries.get('quote:main', {})
     if existing.get('id'):
         current = client.request('GET', '/quotes/' + str(remote_id(existing['id'])))
@@ -164,7 +181,7 @@ def apply(job, journal, path, client):
             if kind == 'origin-groups' and set(old['payload']) - set(payload):
                 blocked.append(key + ': clearing previously priced fields requires reconciliation')
                 continue
-        if kind == 'transfers' and 'sar_fare_micros' not in payload:
+        if kind == 'transfers' and 'sar_fare_micros' not in payload and 'cad_fare_micros' not in payload:
             try:
                 fares = client.request('GET', '/transport-fares')
                 matches = [f for f in fares if all(f.get(k) == payload[k] for k in ('route_from', 'route_to', 'car_type'))]

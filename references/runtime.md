@@ -2,13 +2,13 @@
 
 Canonical complete skill: https://github.com/Amax-Travel/amax-price-quote
 
-An import must include `SKILL.md`, `references/`, and `scripts/`. Pasting only SKILL.md into a skill editor does not install its linked files. A public repository does not grant CRM/API access.
+Import the repository URL through the complete-folder GitHub importer: it must include `SKILL.md`, `references/`, and `scripts/`. Review the supporting files before enabling the imported skill. An older importer warning that only SKILL.md is supported means the importer needs updating. Pasting only SKILL.md into a skill editor does not install its linked files. A public repository does not grant CRM/API access.
 
 ## With shell/filesystem tools
 
-Locate this skill's directory and run `python3 scripts/doctor.py --api` there. Use the script paths relative to that directory, not an older `sales/scripts/quote-prototype` installation. A healthy check proves read access to the pricing contract and fares, not write permissions or CRM stage capabilities.
+Locate this skill's directory and run `python3 scripts/doctor.py --api` there. Use the script paths relative to that directory, not an older `sales/scripts/quote-prototype` installation. The check reports deployed fixed-CAD transport, salesperson lookup, and stage capabilities plus fare read access. It does not perform writes.
 
-If files are missing, inspect available workspace locations, then recover the complete public repository to a new permitted directory:
+If files are missing, reimport the repository URL with the complete-folder importer. Preserve private jobs and journals. If that importer is unavailable and shell recovery is authorized, recover the complete repository to a new permitted directory:
 
 ```sh
 git clone https://github.com/Amax-Travel/amax-price-quote.git /permitted/new-directory/amax-price-quote

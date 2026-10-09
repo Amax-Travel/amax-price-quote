@@ -58,9 +58,9 @@ def plan(job):
             return None
         return micros(cost['amount'])
 
-    opp = select(job['opportunity'], 'person_ref package_type travel_month pax_adult pax_child pax_infant owner_email')
-    if not opp.get('person_ref') or not opp.get('owner_email'):
-        raise ValueError('Verified person_ref and owner_email are required')
+    opp = select(job['opportunity'], 'person_ref package_type travel_month pax_adult pax_child pax_infant owner_email owner_name')
+    if not opp.get('person_ref') or not (opp.get('owner_email') or opp.get('owner_name')):
+        raise ValueError('Verified person_ref and salesperson name or email are required')
     for name in ('pax_adult', 'pax_child', 'pax_infant'):
         if type(opp.get(name)) is not int or opp[name] < 0:
             raise ValueError('All passenger counts must be confirmed nonnegative integers')
@@ -138,12 +138,16 @@ def plan(job):
         payload = select(row, 'route_from route_to car_type qty sort_order')
         if source == 'custom':
             basis = 'per_passenger' if row['car_type'].lower() == 'train' else 'per_vehicle'
-            amount = money(row, 'fare', basis, row['key'] + ' fare', 'SAR')
+            currency = (row.get('fare') or {}).get('currency')
+            if currency not in ('SAR', 'CAD'):
+                missing.append(row['key'] + ': confirm transport fare currency as SAR or CAD')
+                continue
+            amount = money(row, 'fare', basis, row['key'] + ' fare', currency)
             if amount is None:
                 continue
             if amount > 1_000_000_000_000:
                 raise ValueError('Transport unit fare exceeds supported range')
-            payload['sar_fare_micros'] = amount
+            payload['cad_fare_micros' if currency == 'CAD' else 'sar_fare_micros'] = amount
         elif source != 'fare_table' or 'fare' in row:
             raise ValueError('Explicit custom pricing_source required for supplied fares')
         add(row['key'], 'transfers', payload)

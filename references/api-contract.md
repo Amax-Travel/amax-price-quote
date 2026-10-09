@@ -8,6 +8,9 @@ The adapter creates an opportunity and draft quote for a new journal, then origi
 
 | Operation | Endpoint |
 | --- | --- |
+| Find salesperson by name | GET /opportunities/owners?q=NAME |
+| Workflow stage | POST /quotes/{id}/opportunity-stage |
+| Publish approved quote | POST /quotes/{id}/finalize |
 | Create verified opportunity | POST /opportunities |
 | Draft quote | POST /quotes; GET/PATCH /quotes/{id} |
 | Groups, flights, passengers, hotels | POST /quotes/{id}/{kind}; PATCH /quotes/{id}/{kind}/{row_id} |
@@ -18,8 +21,8 @@ The adapter creates an opportunity and draft quote for a new journal, then origi
 | Customer PDF | GET /quotes/{id}/pdf, optional origin_group_id |
 | Internal PDF | GET /quotes/{id}/pdf/internal |
 
-The server rejects legacy hotel write fields such as nightly or combined line totals. Quote exchange-rate PATCH reprices existing draft transfers from their saved original SAR unit fare and quantity. Custom transport supplies SAR only; Core calculates CAD. Fare-table transport requires a unique positive route/vehicle match.
+The server rejects legacy hotel write fields such as nightly or combined line totals. Quote exchange-rate PATCH reprices existing draft transfers from their saved original SAR unit fare and quantity. Custom transport supplies exactly one of `sar_fare_micros` or `cad_fare_micros`. Fixed CAD unit fares multiply by quantity without FX and remain fixed on rate updates. Before CAD writes require `transport_cad_cost_input: "cad_fare_micros"` in the pricing contract. Fare-table transport requires a unique positive route/vehicle match.
 
 Pricing sends confirmed `profit_margin_micros`, `commission_mode`, and `commission_input_micros`. Core excludes the prior commission when resolving round-up. The journal tracks pricing intent plus the engine cost/headcount basis, so unchanged apply does not compound or rewrite commission.
 
-PDF filenames come from the server's opportunity title, with a quote fallback and group-ID suffix for grouped downloads. PDF output uses exclusive creation and private permissions. The adapter CLI remains draft-only. For authorized finalization and opportunity stages, follow [crm-lifecycle.md](crm-lifecycle.md). No customer messaging is included.
+PDF filenames come from the server's opportunity title, with a quote fallback and group-ID suffix for grouped downloads. PDF output uses exclusive creation and private permissions. `quote_api.py apply` remains draft-only; `quote_lifecycle.py` handles explicitly authorized publication and stage updates. For authorized finalization and opportunity stages, follow [crm-lifecycle.md](crm-lifecycle.md). No customer messaging is included.

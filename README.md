@@ -1,14 +1,13 @@
 # AMAX Price Quote
 
-Import this repository as a complete skill: [SKILL.md](SKILL.md), `references/`, and `scripts/`. No ZIP is required.
+Import this GitHub repository URL into your agent's skills interface:
 
-```sh
-git clone https://github.com/Amax-Travel/amax-price-quote.git
-cd amax-price-quote
-python3 scripts/doctor.py
-python3 scripts/doctor.py --api
-```
+https://github.com/Amax-Travel/amax-price-quote
 
-A GitHub import that only loads SKILL.md is incomplete. See [runtime recovery](references/runtime.md). Requires Python 3.10+ and the existing AMAX loopback sales gatekeeper for the scripts; API-tool runtimes follow the documented contracts. CRM stage updates require an authorized Twenty write connection. The current custom transport API accepts SAR only; native CAD transport remains an integration gap.
+The complete skill is a normal folder, not a ZIP: `SKILL.md`, `references/`, and `scripts/`. The importer must fetch supporting files recursively. Review the imported files, then enable the skill. An importer that reports “v1 imports only SKILL.md” must be updated; the entrypoint alone is incomplete.
 
-Test the full workflow in the target agent before production use. This repository contains no customer records or credentials.
+Run `python3 scripts/doctor.py --api` from the installed skill directory to verify the files and deployed API capabilities. This skill requires the authorized AMAX sales-host gatekeeper; the public repository contains no credentials or customer records.
+
+The workflow creates and updates drafts, resolves salesperson names, uses saved transport fares or confirmed SAR/CAD custom fares, applies margin and commission through Core, downloads customer/internal PDFs, and publishes an explicitly approved quote into CRM. The linked opportunity moves to Building Quote during preparation and Package Quote Presented after publication. Publication is separate from customer messaging.
+
+All scripts stay inside this skill. Keep client jobs, journals, lifecycle records, and PDFs in private working folders outside it. Preserve each client's original journal when resuming. Python 3.10+ is required; there are no third-party Python dependencies.

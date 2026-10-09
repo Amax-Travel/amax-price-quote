@@ -8,7 +8,7 @@ REQUIRED = (
     'SKILL.md', 'references/api-contract.md', 'references/crm-lifecycle.md',
     'references/examples.md', 'references/quote-inputs.md', 'references/recovery.md',
     'references/runtime.md', 'scripts/quote_api.py', 'scripts/quote_payload.py',
-    'scripts/quote_contract.py', 'scripts/quote_pdf.py',
+    'scripts/quote_contract.py', 'scripts/quote_pdf.py', 'scripts/quote_lifecycle.py',
 )
 
 
@@ -21,7 +21,10 @@ def check(root, api=False):
         from quote_api import Client
         from quote_contract import check_capability
         client = Client()
-        check_capability(client)
+        contract = check_capability(client)
+        result['fixed_cad_transport'] = contract.get('transport_cad_cost_input') == 'cad_fare_micros'
+        result['opportunity_stages'] = contract.get('opportunity_stage_path') == '/quotes/{quote_id}/opportunity-stage'
+        result['salesperson_lookup'] = contract.get('owner_lookup_path') == '/opportunities/owners'
         result['pricing_contract'] = 'compatible'
         fares = client.request('GET', '/transport-fares')
         if not isinstance(fares, list):
