@@ -13,7 +13,7 @@ For a legacy hotel job, preserve a private backup, convert the confirmed combine
 
 ## Known review issues
 
-A quote may show blank CRM contact or salesperson projection to the sales principal even when an authorized CRM view confirms the opportunity owner/contact. Do not infer missing ownership or broaden access to repair the display. Report identity projection for engineering review; this adapter does not resolve it or claim CRM publishing is complete.
+If a saved draft has a blank client name, a generic `Amax-Client-…` reference, missing person link, or an unexpected owner/opportunity, pause PDF delivery and publication. Keep the draft ID and journal; compare the saved quote against the verified CRM opportunity/contact. Do not recreate the deal or quote, overwrite the audit creator, or infer a replacement owner. Core must be deployed with its exact trusted sales-service identity configured for linked CRM projections. Ask an authorized operator to repair confirmed legacy draft identity; this adapter does not repair it. Finalized historical quotes require a separate reviewed correction. A successful pricing request does not prove the CRM identity is correct.
 
 The internal PDF may show a quote-level passenger-count warning when origin-group counts already match. Verify totals against the groups; do not double-count or remove valid travellers to suppress the warning.
 

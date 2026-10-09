@@ -26,3 +26,11 @@ The server rejects legacy hotel write fields such as nightly or combined line to
 Pricing sends confirmed `profit_margin_micros`, `commission_mode`, and `commission_input_micros`. Core excludes the prior commission when resolving round-up. The journal tracks pricing intent plus the engine cost/headcount basis, so unchanged apply does not compound or rewrite commission.
 
 PDF filenames come from the server's opportunity title, with a quote fallback and group-ID suffix for grouped downloads. PDF output uses exclusive creation and private permissions. `quote_api.py apply` remains draft-only; `quote_lifecycle.py` handles explicitly authorized publication and stage updates. For authorized finalization and opportunity stages, follow [crm-lifecycle.md](crm-lifecycle.md). No customer messaging is included.
+
+## CRM identity and naming
+
+For the configured trusted sales service, Core resolves the quote's CRM person and omitted client name from the linked opportunity/contact. An unavailable or deleted CRM identity returns HTTP 409; it is not a request to invent a client name. Retain the original opportunity and journal while resolving the lookup.
+
+After creation, GET the saved quote and compare `client_name`, `twenty_person_id`, and `twenty_opportunity_id` to the verified CRM identity. Verify `salesperson_name`/`salesperson_email` against the assigned owner; `created_by` is the bot actor and must not be changed to impersonate the rep. Read back the CRM stage and liveness when available. Missing projections are a configuration/sync issue, not evidence that the opportunity should be recreated.
+
+Dashboard references use `Amax-{ClientSlug}-Q{opportunity_seq}` plus a revision suffix after version 1. PDF filenames separately follow the server's opportunity-title SOP; preserve the returned Content-Disposition filename. Do not rename files locally to disguise missing client or opportunity data.
