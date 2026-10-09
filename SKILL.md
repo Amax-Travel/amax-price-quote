@@ -7,6 +7,18 @@ description: Build and review AMAX travel quotes, download customer and internal
 
 Turn confirmed sales inputs into a resumable draft quote. Core is authoritative for prices and totals. Use the bundled API adapter; keep each client's job, journal, and downloaded PDFs in private sales working folders outside this skill.
 
+## Start by acting
+
+“AMAX/Amex price code,” “price quote,” and “create the PDF” mean execute this quote workflow in a client conversation. Do not ask whether to author a new SKILL.md unless the user explicitly requests skill development. Reuse all confirmed facts and corrections from the conversation; do not restart an intake questionnaire.
+
+First locate this complete skill folder and run `python3 scripts/doctor.py --api` when shell execution is available. Read [runtime.md](references/runtime.md) for missing files, tool-only runtimes, or connection failures. Do not report “no CRM/computer” before checking available API tools: a browser is not required. Recover missing public skill files before asking the user to fix the installation.
+
+Use authorized lookups for CRM identity, existing opportunities, owner, fare tables, and quote state. A person ID is not an opportunity ID. No matching opportunity is the supported create-or-reuse path through `POST /opportunities`, not a reason to demand an opportunity link. See [quote-inputs.md](references/quote-inputs.md).
+
+Ask only for a fact that changes price, scope, or identity and cannot be resolved from the conversation or authorized sources. Ask one concise bundled question while continuing independent work. Do not ask the user to supply available fare-table prices. A short “yes” confirms a single clear proposition; if your prior question offered conflicting alternatives, narrow only that unresolved point. Later specific corrections override earlier general confirmations.
+
+“Create PDF” authorizes saving the requested draft and downloading its customer PDF. Continue through API writes, server totals, and download, then provide the actual file. It does not authorize finalization or customer messaging. A missing optional name, nationality, or PNR may stay explicitly pending for a draft. Missing required prices must remain unresolved; never call a subtotal the final customer price.
+
 ## Workflow
 
 1. Read [quote-inputs.md](references/quote-inputs.md) when collecting or changing inputs. Identify the existing quote and original journal before creating anything. Confirm CRM person reference and salesperson ownership through authorized CRM lookups; never fabricate IDs. Follow [crm-lifecycle.md](references/crm-lifecycle.md) to set and verify the opportunity stage `BUILDING_QUOTE` when building begins, once its ID is available. Do not reset a later-stage opportunity automatically.
